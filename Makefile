@@ -9,7 +9,7 @@ clean:
 		@stack clean --allow-different-user
 
 fclean: clean
-		@rm -f $(NAME)
+		@rm -rf .stack-work $(NAME)
 
 re: fclean all
 
