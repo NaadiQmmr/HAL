@@ -7,7 +7,6 @@ import Control.Applicative
 newtype Parser a = Parser { parse :: String -> Parsed a }
 
 data Parsed a = Error ParserError | Value String a deriving (Eq)
-
 data ParserError = EOF | ExpectedEOF String |
     ForbiddenChar Char | ForbiddenString String |
     Empty
@@ -30,9 +29,7 @@ instance Monad Parser where
                                         Error e         -> Error e)
 
 instance Alternative Parser where
-    empty                       = Parser (\p -> Error Empty)
-    (<|>) a b                   = a ||| b
+    empty                       = Parser (\_ -> Error Empty)
+    (<|>) a b                   = Parser (\x -> let f (Error _) = parse b x
+                                                    f r = r in f $ parse a x)
 
-(|||) :: Parser a -> Parser a -> Parser a
-p1 ||| p2 = Parser (\x -> let f (Error _) = parse p2 x
-                              f r = r in f $ parse p1 x)
