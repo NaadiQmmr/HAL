@@ -7,9 +7,9 @@ import Data.Char
 
 cleanSpaces :: String -> String
 cleanSpaces [] = []
-cleanSpaces (x:xs) = case x of
-    ' '     -> cleanSpaces xs
-    '\r'    -> cleanSpaces xs
-    '\n'    -> cleanSpaces xs
-    '\t'    -> cleanSpaces xs
-    _       -> x:cleanSpaces xs
+cleanSpaces (' ':xs) = cleanSpaces xs
+cleanSpaces ('\r':xs) = cleanSpaces xs
+cleanSpaces ('\n':xs) = cleanSpaces xs
+cleanSpaces ('\t':xs) = cleanSpaces xs
+cleanSpaces (x:xs) = x:cleanSpaces xs
+

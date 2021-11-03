@@ -40,7 +40,7 @@ select :: String -> Parser String
 select s = selected $ with s
     where selected p = p >>= \a -> spaces >> return a
 
-chain :: Parser a -> Parser (a -> a -> a) -> Parser a
-p `chain` op = p >>= \x -> rest x
+combine :: Parser a -> Parser (a -> a -> a) -> Parser a
+p `combine` op = p >>= \x -> rest x
     where rest x = (op >>= \f -> p >>= \y -> rest $ f x y) <|> return x
 
