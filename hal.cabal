@@ -6,14 +6,13 @@ cabal-version: 1.12
 
 name:           hal
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/hal#readme>
-homepage:       https://github.com/githubuser/hal#readme
-bug-reports:    https://github.com/githubuser/hal/issues
-author:         Author name here
-maintainer:     example@example.com
-copyright:      2021 Author name here
+description:    Please see the README on GitHub at <https://github.com/bogdzn/hal#readme>
+homepage:       https://github.com/bogdzn/hal#readme
+bug-reports:    https://github.com/bogdzn/hal/issues
+author:         bogdzn
+maintainer:     wontsleep@protonmail.com
+copyright:      2021 bogdzn
 license:        BSD3
-license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
     README.md
@@ -21,11 +20,13 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/hal
+  location: https://github.com/bogdzn/hal
 
 library
   exposed-modules:
+      CombinedParsers
       Lib
+      ParserLib
   other-modules:
       Paths_hal
   hs-source-dirs:
@@ -40,7 +41,7 @@ executable hal-exe
       Paths_hal
   hs-source-dirs:
       app
-  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -O2
   build-depends:
       base >=4.7 && <5
     , hal
@@ -55,6 +56,7 @@ test-suite hal-test
       test
   ghc-options: -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.7 && <5
+      HUnit
+    , base >=4.7 && <5
     , hal
   default-language: Haskell2010
