@@ -1,10 +1,10 @@
 name:                hal
 version:             0.1.0.0
-github:              "bogdzn/hal"
+github:              "bogdina/hal"
 license:             BSD3
-author:              "bogdzn"
+author:              "bogdina"
 maintainer:          "wontsleep@protonmail.com"
-copyright:           "2021 bogdzn"
+copyright:           "2021 bogdina"
 
 extra-source-files:
 - README.md

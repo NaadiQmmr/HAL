@@ -7,11 +7,11 @@ cabal-version: 1.12
 name:           hal
 version:        0.1.0.0
 description:    Please see the README on GitHub at <https://github.com/bogdzn/hal#readme>
-homepage:       https://github.com/bogdzn/hal#readme
-bug-reports:    https://github.com/bogdzn/hal/issues
-author:         bogdzn
+homepage:       https://github.com/bogdina/hal#readme
+bug-reports:    https://github.com/bogdina/hal/issues
+author:         bogdina
 maintainer:     wontsleep@protonmail.com
-copyright:      2021 bogdzn
+copyright:      2021 bogdina
 license:        BSD3
 build-type:     Simple
 extra-source-files:
@@ -20,7 +20,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/bogdzn/hal
+  location: https://github.com/bogdina/hal
 
 library
   exposed-modules:
