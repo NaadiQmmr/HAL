@@ -16,4 +16,7 @@ re: fclean all
 tests_run:
 	@stack test --allow-different-user
 
-.PHONY: all clean fclean re
+func:
+	@bash ./test/func_tests
+
+.PHONY: all clean fclean re func
