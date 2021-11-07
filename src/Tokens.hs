@@ -12,6 +12,9 @@ instance Show Token where
     show (Number i)             = show i
     show (Atom s)               = ":" ++ s                  -- Like in Elixir
     show (String s)             = s
-    show (List x)               = "(" ++ unwords x ++ ")"
+    show (List x)               = "(" ++ unlist x ++ ")"
+
+unlist :: [Token] -> String
+unlist = unwords . map show
 
 

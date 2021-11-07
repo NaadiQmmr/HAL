@@ -12,6 +12,14 @@ data ParserError = EOF | ExpectedEOF String |
     Empty
     deriving (Eq)
 
+instance Show ParserError where
+    show e = "*** ERROR : " ++ case e of
+        EOF                 -> "Unexpected End of file."
+        ExpectedEOF str     -> "Expected EOF but got " ++ str ++ "."
+        ForbiddenChar c     -> "Unknown data type: " ++ [c] ++ "."
+        ForbiddenString s   -> "Unknown data type: " ++ s ++ "."
+        Empty               -> "Unexpected End of file."
+
 instance Functor Parsed where
     fmap f (Value x a)          = Value x (f a)
     fmap _ (Error e)            = Error e
