@@ -9,8 +9,17 @@ newtype Parser a = Parser { parse :: String -> Parsed a }
 data Parsed a = Error ParserError | Value String a deriving (Eq)
 data ParserError = EOF | ExpectedEOF String |
     ForbiddenChar Char | ForbiddenString String |
-    Empty
+    Empty | ParsedError String
     deriving (Eq)
+
+instance Show ParserError where
+    show e = "*** ERROR : " ++ case e of
+        EOF                 -> "Unexpected End of file."
+        ExpectedEOF str     -> "Expected EOF but got " ++ str ++ "."
+        ForbiddenChar c     -> "Unknown data type: " ++ [c] ++ "."
+        ForbiddenString s   -> "Unknown data type: " ++ s ++ "."
+        Empty               -> "Unexpected End of file."
+        ParsedError s       -> s ++ "."
 
 instance Functor Parsed where
     fmap f (Value x a)          = Value x (f a)
