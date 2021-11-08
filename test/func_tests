@@ -1,0 +1,32 @@
+#!/bin/env bash
+
+which scheme || \
+    { echo "Could not find scheme interpreter installed. Please install Chez-Scheme." \
+    && exit 1 ; }
+
+make re || \
+    { echo "Could not compile binary, exiting." \
+    && exit 1 ; }
+
+# Finding all scheme files available and put them in an array
+# https://stackoverflow.com/questions/23356779/how-can-i-store-the-find-command-results-as-an-array-in-bash/54561526
+FILES=$(mapfile -d $'\0' array < <(find . -type f -name "*.scm" -print0))
+
+for file in "${FILES[@]}"; do
+    REAL_RESULT=$(scheme -q --script "${file}")
+    OUR_RESULT=$(./hal "${file}")
+
+    if [[ "${REAL_RESULT}" != "${OUR_RESULT}" ]];
+        echo "Failure for ${file}."
+        echo ""
+        echo "Expected:"
+        echo "${REAL_RESULT}"
+        echo ""
+        echo ""
+        echo "Got:"
+        echo "${OUR_RESULT}"
+        echo ""
+        echo ""
+    else "${file} got correctly interpreted."
+    fi
+done

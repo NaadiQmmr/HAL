@@ -27,6 +27,7 @@ library
       CombinedParsers
       Lib
       ParserLib
+      Tokens
   other-modules:
       Paths_hal
   hs-source-dirs:
