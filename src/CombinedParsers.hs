@@ -13,6 +13,9 @@ runParser p s = case parse p s of
 hasOneOf :: String -> Parser Char
 hasOneOf x = satisfy $ flip elem x
 
+letter :: Parser Char
+letter = satisfy isAlpha
+
 digit :: Parser Char
 digit = satisfy isDigit
 
@@ -20,6 +23,14 @@ char :: Parser Char
 char = Parser p
     where p []      = Error EOF
           p (x:xs)  = Value xs x
+
+end :: Parser a -> Parser b -> Parser [a]
+end a s = many' $ a >>= \x -> s >> return x
+    where many' x = liftM2 (:) x (many x)
+
+sep :: Parser a -> Parser s -> Parser [a]
+sep p s = isSepBy p s <|> return []
+    where isSepBy p s = liftM2 (:) p (many (s >> p))
 
 has :: Char -> Parser Char
 has c = satisfy (c==)
