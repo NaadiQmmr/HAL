@@ -7,6 +7,7 @@ import Data.IORef
 import Control.Monad
 import Control.Applicative
 import Data.Char
+import GHC.Real (Real)
 
 type Env = IORef [(String, IORef Token)]
 data Token = Number Integer |
@@ -15,7 +16,7 @@ data Token = Number Integer |
     Atom String |
     List [Token] |
     ImproperList [Token] Token |
-    Primitive ([Token] -> Either ParserError Token) |
+    Primitive { _name :: String, _f :: [Token] -> Either ParserError Token } |
     Lambda { _params :: [Token], _args :: Maybe Token,
         _body :: [Token], _env :: Env }
 
@@ -25,10 +26,24 @@ instance Show Token where
     show (Number i)             = show i
     show (Atom s)               = s
     show (String s)             = s
-    show (List x)               = "'(" ++ unlist x ++ ")"
-    show (Primitive _)          = "<primitive>"
-    show Lambda {_params = x}   = "(" ++ unlist x ++ ")"
+    show (List x)               = "(" ++ unlist x ++ ")"
+    show (Primitive name _)          = "<primitive> (" ++ name ++ ")"
+    show Lambda {_params = p}   = "<lambda (" ++ unlist p ++ ")."
     show (ImproperList xs x)    = "(" ++ show x ++ ":" ++ unlist xs ++ ")"
+
+
+instance Eq Token where
+    Bool a == Bool b            = a == b
+    String a == String b        = a == b
+    Atom a == Atom b            = a == b
+    Number a == Number b        = a == b
+    List a == List b            = a == b
+    Primitive n _ == Primitive n' _ = n == n'
+    Lambda p a b e == Lambda p' a' b' e' = p == p' && a == a' && b == b' && e == e'
+    -- Lambda p a b e == Primitive n f
+    _ == _ = False -- any other type comparison is False
+
+
 
 unlist :: [Token] -> String
 unlist = unwords . map show
@@ -67,7 +82,7 @@ number = do
     return $ Number $ read $ sign ++ nbs
 
 list :: Parser Token
-list = liftM List $ sep expr spaces
+list = List <$> sep expr spaces
 
 improperList :: Parser Token
 improperList = do
