@@ -13,7 +13,7 @@ data ParserError = EOF | ExpectedEOF String |
     deriving (Eq)
 
 instance Show ParserError where
-    show e = "*** ERROR : " ++ case e of
+    show e = "*** PARSING ERROR : " ++ case e of
         EOF                 -> "Unexpected End of file."
         ExpectedEOF str     -> "Expected EOF but got " ++ str ++ "."
         ForbiddenChar c     -> "Unexpected data: " ++ [c] ++ "."
@@ -30,7 +30,7 @@ instance Functor Parser where
 
 instance Applicative Parser where
     pure x                      = Parser (`Value` x)
-    (<*>)                       = ap
+    (<*>) p x                   = p >>= (x <&>)
 
 instance Monad Parser where
     (>>=) (Parser p) f          = Parser (\a -> case p a of
@@ -39,6 +39,8 @@ instance Monad Parser where
 
 instance Alternative Parser where
     empty                       = Parser (\_ -> Error Empty)
-    (<|>) a b                   = Parser (\x -> let f (Error _) = parse b x
-                                                    f r = r in f $ parse a x)
+    (<|>) a b                   = a ||| b
 
+(|||) :: Parser a -> Parser a -> Parser a
+p1 ||| p2 = Parser (\x -> let f (Error _) = parse p2 x
+                              f r = r in f $ parse p1 x)

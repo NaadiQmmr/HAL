@@ -7,18 +7,39 @@ import Data.IORef
 import Control.Monad
 import Control.Applicative
 import Data.Char
-import GHC.Real (Real)
 
 type Env = IORef [(String, IORef Token)]
+
+type Run a = Either RuntimeError a
+newtype Func = Func { function :: [Token] -> Run Token }
+
+data RuntimeError = NumArgs Integer [Token]
+               | TypeMismatch String Token
+               | BadSpecialForm Token
+               | NotFunction String
+               | UnboundVar String
+               | Default String
+
+instance Show RuntimeError where
+    show e = "*** RUNTIME ERROR : " ++ case e of
+        Default s         -> s 
+        UnboundVar s      -> "Var " ++ s ++ " is not bound." 
+        NotFunction s     -> "Not a function: " ++ show s ++ "."
+        BadSpecialForm t  -> "Bad special form: " ++ show t ++ "."
+        NumArgs i tks     -> "Wrong number of arguments. Expected "
+                    ++ show i ++ ", got " ++ show (length tks) ++ "."
+        TypeMismatch s t  -> "Wrong Type. Expected " ++ s ++ ", got " ++
+                    show t ++ "."
+
 data Token = Number Integer |
     Bool Bool |
     String String |
     Atom String |
     List [Token] |
     ImproperList [Token] Token |
-    Primitive { _name :: String, _f :: [Token] -> Either ParserError Token } |
-    Lambda { _params :: [Token], _args :: Maybe Token,
-        _body :: [Token], _env :: Env }
+    Primitive String Func |
+    Lambda Env Func |
+    Nil
 
 instance Show Token where
     show (Bool True)            = "#t"
@@ -27,23 +48,10 @@ instance Show Token where
     show (Atom s)               = s
     show (String s)             = s
     show (List x)               = "(" ++ unlist x ++ ")"
-    show (Primitive name _)          = "<primitive> (" ++ name ++ ")"
-    show Lambda {_params = p}   = "<lambda (" ++ unlist p ++ ")."
+    show (Primitive name _)     = "<function " ++ name ++ ">"
+    show (Lambda _ _)           = "<lambda>"
     show (ImproperList xs x)    = "(" ++ show x ++ ":" ++ unlist xs ++ ")"
-
-
-instance Eq Token where
-    Bool a == Bool b            = a == b
-    String a == String b        = a == b
-    Atom a == Atom b            = a == b
-    Number a == Number b        = a == b
-    List a == List b            = a == b
-    Primitive n _ == Primitive n' _ = n == n'
-    Lambda p a b e == Lambda p' a' b' e' = p == p' && a == a' && b == b' && e == e'
-    -- Lambda p a b e == Primitive n f
-    _ == _ = False -- any other type comparison is False
-
-
+    show Nil                    = "Nil"
 
 unlist :: [Token] -> String
 unlist = unwords . map show
@@ -61,10 +69,12 @@ atom :: Parser Token
 atom = do
     x   <- letter <|> symbol
     xs  <- many $ digit <|> symbol <|> letter
-    return $ case x:xs of
+
+    let together = x:xs
+    return $ case together of
         "#t"    -> Bool True
         "#f"    -> Bool False
-        _       -> Atom $ x:xs
+        _       -> Atom together
 
 quote :: Parser Token
 quote = has '\'' >> expr >>= \x -> return $ List [Atom "quote", x]
@@ -91,7 +101,7 @@ improperList = do
     return $ ImproperList head tail
 
 expr :: Parser Token
-expr = atom <|> string <|> number <|> quote <|> do
+expr = atom <|> number <|> string <|> quote <|> do
     has '('
     parsed <- list <|> improperList
     has ')'

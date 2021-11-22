@@ -1,18 +1,43 @@
 module Eval where
 
 import Tokens
+import ParserLib
 import Data.Either
-import Control.Exception.Base (runtimeError)
+import Data.Functor
+import Control.Monad.State
+import Control.Monad.Except
+import Primitives
 
-cons :: Token -> Token -> Token
-cons a b = List[a, b]
+run :: String -> Run Token
+run x = case parse expr x of
+    Error err        -> Left $ Default $ show err
+    Value _ tokens   -> eval tokens
 
-car :: Token -> Either runtimeError Token
-car (List []) = Right $ List []
-car (List (x:_)) = Right x
-car _ = Left $ error "***ERROR: argument of car should be a list."
+trap :: (MonadError a m, Show a) => m String -> m String
+trap x = catchError x $ return . show
 
-cdr :: Token -> Either runTimeError Token
-cdr (List []) = Right $ List []
-cdr (List (_: xs)) = Right $ List xs
-cdr _ = Left $ error "***ERROR: argument of cdr should be a list."
+-- Pattern matching with val@SomeValue because we want to keep the type.
+eval :: Token -> Run Token
+eval val@(String _) = Right val
+eval val@(Number _) = Right val
+eval val@(Bool _) = Right val
+eval (List [Atom "quote", val]) = Right val
+eval val@(List [Atom "cond", a, b, c]) = conditionnal val
+eval val@(List [Atom "if", a, b, c]) = conditionnal val
+eval (List (Atom f : a)) = mapM eval a >>= apply f
+eval err = Left $ BadSpecialForm err
+
+{-# ANN module "HLint: ignore Use lambda-case" #-}
+conditionnal :: Token -> Run Token
+conditionnal (List [Atom "if", pred, then', else']) =
+        eval pred >>= \r -> case r of
+                Bool False      -> eval else'
+                _               -> eval then'
+conditionnal _ = Left $ Default "Entered conditionnal without if statement."
+
+apply :: String -> [Token] -> Run Token
+apply f a = maybe (Left (NotFunction f)) ($ a) $ lookup f prims
+
+get :: Run Token -> Token
+get (Right x) = x
+get _ = Nil
