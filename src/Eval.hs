@@ -21,6 +21,8 @@ eval :: Token -> Run Token
 eval val@(String _) = Right val
 eval val@(Number _) = Right val
 eval val@(Bool _) = Right val
+eval val@(Atom _) = Right val
+eval val@Nil = Right val
 eval (List [Atom "quote", val]) = Right val
 eval val@(List [Atom "cond", a, b, c]) = conditionnal val
 eval val@(List [Atom "if", a, b, c]) = conditionnal val
@@ -29,10 +31,10 @@ eval err = Left $ BadSpecialForm err
 
 {-# ANN module "HLint: ignore Use lambda-case" #-}
 conditionnal :: Token -> Run Token
-conditionnal (List [Atom "if", pred, then', else']) =
+conditionnal (List [Atom _, pred, then', else']) =
         eval pred >>= \r -> case r of
                 Bool False      -> eval else'
-                _               -> eval then'
+                _               -> eval then'    
 conditionnal _ = Left $ Default "Entered conditionnal without if statement."
 
 apply :: String -> [Token] -> Run Token

@@ -31,6 +31,7 @@ instance Show RuntimeError where
         TypeMismatch s t  -> "Wrong Type. Expected " ++ s ++ ", got " ++
                     show t ++ "."
 
+
 data Token = Number Integer |
     Bool Bool |
     String String |
@@ -50,7 +51,7 @@ instance Show Token where
     show (List x)               = "(" ++ unlist x ++ ")"
     show (Primitive name _)     = "<function " ++ name ++ ">"
     show (Lambda _ _)           = "<lambda>"
-    show (ImproperList xs x)    = "(" ++ show x ++ ":" ++ unlist xs ++ ")"
+    show (ImproperList xs x)    = "(" ++ show x ++ "." ++ unlist xs ++ ")"
     show Nil                    = "Nil"
 
 unlist :: [Token] -> String
