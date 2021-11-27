@@ -22,15 +22,14 @@ data RuntimeError = NumArgs Integer [Token]
 
 instance Show RuntimeError where
     show e = "*** RUNTIME ERROR : " ++ case e of
-        Default s         -> s 
-        UnboundVar s      -> "Var " ++ s ++ " is not bound." 
+        Default s         -> s
+        UnboundVar s      -> "Var " ++ s ++ " is not bound."
         NotFunction s     -> "Not a function: " ++ show s ++ "."
         BadSpecialForm t  -> "Bad special form: " ++ show t ++ "."
         NumArgs i tks     -> "Wrong number of arguments. Expected "
                     ++ show i ++ ", got " ++ show (length tks) ++ "."
         TypeMismatch s t  -> "Wrong Type. Expected " ++ s ++ ", got " ++
                     show t ++ "."
-
 
 data Token = Number Integer |
     Bool Bool |
@@ -47,11 +46,11 @@ instance Show Token where
     show (Bool False)           = "#f"
     show (Number i)             = show i
     show (Atom s)               = s
-    show (String s)             = s
+    show (String s)             = "\"" ++ s ++ "\""
     show (List x)               = "(" ++ unlist x ++ ")"
     show (Primitive name _)     = "<function " ++ name ++ ">"
     show (Lambda _ _)           = "<lambda>"
-    show (ImproperList xs x)    = "(" ++ show x ++ "." ++ unlist xs ++ ")"
+    show (ImproperList xs x)    = "(" ++ show x ++ " . " ++ unlist xs ++ ")"
     show Nil                    = "Nil"
 
 unlist :: [Token] -> String

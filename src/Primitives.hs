@@ -68,20 +68,21 @@ unpackB (Bool b) = return b
 unpackB b        = Left $ TypeMismatch "boolean" b
 
 car :: [Token] -> Run Token
-car [List (x:xs)]               = return x
+car [List (x:_)]                = return x
 car [ImproperList xs x]         = return x
 car [any]                       = Left $ TypeMismatch "pair" any
 car x                           = Left $ NumArgs 1 x
 
 cdr :: [Token] -> Run Token
-cdr [List (x:xs)]               = return $ List xs
+cdr [List (_:xs)]               = if null xs then return (Nil)
+                                  else return $ List xs
 cdr [ImproperList [_] x]        = return x
 cdr [ImproperList (_:xs) x]     = return $ ImproperList xs x
-cdr [any]                       = Left $ TypeMismatch "pair" any
-cdr x                           = Left $ NumArgs 1 x
+cdr (x:_)                       = Left $ TypeMismatch "pair" x
+cdr []                          = Left $ TypeMismatch "pair" Nil
 
 cons :: [Token] -> Run Token
-cons [x1, List []]              = return $ List [x1]
+cons [x1, Nil]                  = return $ List [x1]
 cons [x, List xs]               = return $ List $ x:xs
 cons [x, ImproperList xs x']    = return $ ImproperList (x:xs) x'
 cons [x1, x2]                   = return $ ImproperList [x1] x2
