@@ -45,4 +45,3 @@ testCdrInvalidType = TestCase $ assertEqual "cdr waits for 1 list || improperlis
 testConsNumArgs = TestCase $ assertEqual "cons waits for 2 elements."
                 (Left $ NumArgs 2 [Tokens.List[Tokens.Number 1]])
                 (eval $ Tokens.List[Tokens.Atom "cons", Tokens.List[Tokens.Number 1]])
-

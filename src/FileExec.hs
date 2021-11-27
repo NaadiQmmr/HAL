@@ -7,7 +7,7 @@ import Eval
 import System.IO
 
 safeRead :: String -> IO (Maybe String)
-safeRead path = (fmap Just $ readFile path) `catch` handleExists
+safeRead path = fmap Just (readFile path) `catch` handleExists
 
 handleExists :: IOException -> IO (Maybe String)
 handleExists _ = return $ Nothing
@@ -22,7 +22,7 @@ readFiles (x:xs) = do
 
 execContent :: [String] -> IO ()
 execContent [] = return ()
-execContent (x:xs) = case (run x) of
+execContent (x:xs) = case run x of
             Right r  -> execContent xs
             Left err -> exitWith $ ExitFailure 84
 

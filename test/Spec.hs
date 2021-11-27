@@ -75,24 +75,25 @@ testListCdrCompo2 = TestCase $ assertEqual "Should construct cdr on a List with 
                         Tokens.List [Tokens.Atom "quote", Tokens.List [Tokens.String "a", Tokens.String "b", Tokens.String "c"]]])
 
 testImproperList = TestCase $ assertEqual "Basic construction of an ImproperList"
-                (Right $ Tokens.ImproperList [Tokens.String "b"] (Tokens.String "a"))
-                (eval $ Tokens.List [Tokens.Atom "cons", Tokens.List[Tokens.String "a", Tokens.String "b"]])
+                (Right $ Tokens.ImproperList [Tokens.String "a"] (Tokens.String "b"))
+                (eval $ Tokens.List [Tokens.Atom "cons", Tokens.String "a", Tokens.String "b"])
+
 
 testImproperList2 = TestCase $ assertEqual "Represent: (cons '() 1)"
                     (Right $ Tokens.ImproperList [Tokens.List[]] (Tokens.Number 1))
-                    (eval $ Tokens.List[Tokens.Atom "cons", Tokens.List [Tokens.Atom "quote", Tokens.List[Tokens.List[]]], Tokens.Number 1])
+                    (eval $ Tokens.List[Tokens.Atom "cons", Tokens.List [Tokens.Atom "quote", Tokens.List[]], Tokens.Number 1])
 
 testImproperListCar = TestCase $ assertEqual "Represents: (car (cons '(a b) 1))"
                 (Right $ Tokens.Number 1)
                 (run "(car (cons '(a b) 1))")
 
 testImproperListCdr = TestCase $ assertEqual "Represents: (cdr (cons '(a b))"
-                (Right $ Tokens.List [Tokens.String "a"])
+                (Right $ Tokens.String "b")
                 (eval $ Tokens.List [Tokens.Atom "cdr",
-                        Tokens.List [Tokens.ImproperList [Tokens.String "a"] (Tokens.String "b")]])
+                        Tokens.List[Tokens.Atom "cons", Tokens.String "a", Tokens.String "b"]])
 
 
-testListHard = TestCase $ assertEqual "Represents: (cons '(1) '(2 3)"
+testListHard = TestCase $ assertEqual "Represents: (cons '(1) '(2 3))"
                 (Right $ Tokens.List[Tokens.List [Tokens.Number 1], Tokens.Number 2, Tokens.Number 3])
                 (eval $ Tokens.List[Tokens.Atom "cons", Tokens.List[Tokens.Atom "quote", Tokens.List[Tokens.Number 1]], Tokens.List[Tokens.Atom "quote", Tokens.List[Tokens.Number 2, Tokens.Number 3]]])
 

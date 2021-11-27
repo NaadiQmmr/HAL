@@ -1,6 +1,7 @@
 module Primitives where
 
 import Data.Functor
+
 import Tokens
 
 nPrims :: [(String, [Token] -> Run Token)]
@@ -47,7 +48,7 @@ boolPrim unpack op args = if length args /= 2
 
 numPrim :: (Integer -> Integer -> Integer) -> [Token] -> Run Token
 numPrim op x = if length x /= 2 then Left $ NumArgs 2 x
-        else mapM unpackNb x <&> (Number . foldl1 op)
+        else mapM unpackNb x <&> Number . foldl1 op
 
 unpackNb :: Token -> Run Integer
 unpackNb (Number n) = return n
@@ -74,15 +75,22 @@ car [any]                       = Left $ TypeMismatch "pair" any
 car x                           = Left $ NumArgs 1 x
 
 cdr :: [Token] -> Run Token
-cdr [List (_:xs)]               = if null xs then return (Nil)
+cdr [List (_:xs)]               = if null xs then return Nil
                                   else return $ List xs
 cdr [ImproperList [_] x]        = return x
 cdr [ImproperList (_:xs) x]     = return $ ImproperList xs x
 cdr (x:_)                       = Left $ TypeMismatch "pair" x
 cdr []                          = Left $ TypeMismatch "pair" Nil
 
+setHead :: Token -> Token -> Token
+setHead _        (List [a])     = a
+setHead (List a) (List [])      = List [List a]
+setHead (List a) (List (x: xs)) = List [List a, x, setHead (List a) (List xs)]
+
 cons :: [Token] -> Run Token
 cons [x1, Nil]                  = return $ List [x1]
+cons [List a, List b]           = return $ setHead (List a) (List b)
+cons [List a, b]                = return $ ImproperList [List a] b
 cons [x, List xs]               = return $ List $ x:xs
 cons [x, ImproperList xs x']    = return $ ImproperList (x:xs) x'
 cons [x1, x2]                   = return $ ImproperList [x1] x2
@@ -95,7 +103,7 @@ eqv [String a1, String a2]      = return $ Bool $ a1 == a2
 eqv [Atom a1, Atom a2]          = return $ Bool $ a1 == a2
 eqv [ImproperList xs x, ImproperList ys y] =
         eqv [List $ xs ++ [x], List $ ys ++ [y]]
-eqv [List a1, List a2]          = return $ Bool $ (length a1 == length a2) &&
+eqv [List a1, List a2]          = return $ Bool $ length a1 == length a2 &&
         all eqvPair (zip a1 a2)
 eqv [_, _]                      = return $ Bool False
 eqv x                           = Left $ NumArgs 2 x

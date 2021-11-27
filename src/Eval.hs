@@ -27,16 +27,17 @@ eval val@(Bool _) = return val
 eval val@(Atom _) = return val
 eval val@Nil = return val
 eval val@(List [_]) = return val
-eval (List [Atom "quote", List [val]]) = return val
 eval (List [Atom "quote", val]) = return val
 eval x = evalFuncs x
 
 evalFuncs :: Token -> Run Token
 evalFuncs val@(List (Atom "cond":_)) = conditionnal val
 evalFuncs val@(List (Atom "if":_)) = ifSpecialCase val
-evalFuncs (List (Atom f:a)) = mapM eval a >>= apply f
-        where apply f a = maybe (Left (NotFunction f)) ($ a) $ lookup f prims
+evalFuncs (List (Atom f:a)) = mapM eval a >>= \args -> apply f args
 evalFuncs err = Left $ BadSpecialForm err
+
+apply :: String -> [Token] -> Run Token
+apply f a = maybe (Left $ NotFunction f) ($ a) $ lookup f prims
 
 {-# ANN module "HLint: ignore Use lambda-case" #-}
 ifSpecialCase :: Token -> Run Token
