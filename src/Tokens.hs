@@ -101,6 +101,12 @@ atom = do
         "\'"    -> Atom "\'"
         _       -> Atom together
 
+quote' :: Parser Token
+quote' = has '\'' >> expr >>= \x -> return $ List [Atom "\'", x]
+
+quote :: Parser Token
+quote = with "quote" >> expr >>= \x -> return $ List [Atom "\'", x]
+
 unary :: Parser String
 unary = do
     signs <- many $ hasOneOf "+-"
