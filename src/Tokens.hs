@@ -51,10 +51,10 @@ instance Show Token where
     show (Bool False)           = "#f"
     show (Number i)             = show i
     show (Atom s)               = s
-    show (String s)             = "\"" ++ s ++ "\""
+    show (String s)             = s
     show (List x)               = Tokens.showList x
     show (Primitive _)          = "<function>"
-    show (Lambda a _ b _)       = "<lambda" ++ show a ++ "." ++ show b ++ ">"
+    show (Lambda a _ b _)       = "#<procedure>"
     show (ImproperList xs x)    = "(" ++ unlist xs ++ " . " ++ show x ++ ")"
     show Nil                    = ""
     show (Rat r)                = show r
@@ -130,8 +130,10 @@ improperList = do
     return $ ImproperList head tail
 
 expr :: Parser Token
-expr = atom <|> ratio <|> number <|> string <|> quote' <|> quote <|> do
+expr = spaces >>
+    atom <|> ratio <|> number <|> string <|> quote' <|> quote <|> do
     has '('
-    parsed <- list <|> improperList
+    parsed <- improperList <|> list
     has ')'
+    spaces
     return parsed

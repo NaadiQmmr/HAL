@@ -1,6 +1,6 @@
 import Test.HUnit
 
-import Lib
+import Lib (cleanSpaces, splitExpressions)
 import CombinedParsers
 import ParserLib
 import Eval
@@ -9,6 +9,7 @@ import Repl
 
 import TestLib
 import TestEvalInvalidCases
+
 
 --i love u
 
@@ -30,6 +31,9 @@ testParserHas = TestCase $ assertEqual "Should get first character if predicate"
 testParserHas' = TestCase $ assertEqual "Should not get first character if pred"
                 Nothing (runParser (has 'd') "char")
 
+testSplitExpr = TestCase $ assertEqual "Should split into expression"
+                ["(this is (an example))", " (that should work)"]
+                (splitExpressions "(this is (an example)) (that should work)")
 
 testEvalString = TestCase (do
                                 a <- runSingle "\"blabla\""
@@ -55,7 +59,7 @@ testEvalNegNumber =  TestCase (do
                                 a <- runSingle "(- 3)"
                                 let b = "-3"
                                 assertEqual "Just return the negative number" b a)
- 
+
 testEvalAtom = TestCase (do
                                 a <- runSingle "'word"
                                 let b = "word"
@@ -64,7 +68,7 @@ testEvalAtom = TestCase (do
 testListCompo1 = TestCase (do
                                 a <- runSingle "'(1)"
                                 let b = "(1)"
-                                assertEqual "Basic quote" b a) 
+                                assertEqual "Basic quote" b a)
 
 testListCompo2 = TestCase (do
                                 a <- runSingle "(- 4 1)"
@@ -168,6 +172,7 @@ testRunParser = TestList [
     "parsing a digit"               ~: testParserDigit,
     "parsing some character"        ~: testParserHas,
     "not parsing some character"    ~: testParserHas',
+    "split an expression"           ~: testSplitExpr,
     "eval a string"                 ~: testEvalString,
     "eval a bool"                   ~: testEvalBoolTrue,
     "eval another bool"             ~: testEvalBoolFalse,

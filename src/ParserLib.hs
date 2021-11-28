@@ -44,3 +44,4 @@ instance Alternative Parser where
 (|||) :: Parser a -> Parser a -> Parser a
 p1 ||| p2 = Parser (\x -> let f (Error _) = parse p2 x
                               f r = r in f $ parse p1 x)
+

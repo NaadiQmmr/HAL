@@ -31,8 +31,9 @@ char = Parser p
           p (x:xs)  = Value xs x
 
 end :: Parser a -> Parser b -> Parser [a]
-end a s = many' $ a >>= \x -> s >> return x
-    where many' x = liftM2 (:) x (many x)
+end a s = many' $ a >>= \ res -> s >> return res
+    where   many' p = liftM2 (:) p (many'' p)
+            many'' p = many' p <|> return []
 
 sep :: Parser a -> Parser s -> Parser [a]
 sep p s = isSepBy p s <|> return []

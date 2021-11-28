@@ -42,13 +42,13 @@ define :: Env -> String -> Token -> IORuntimeError Token
 define envRef v val = do
     alreadyExists <- liftIO $ isBound envRef v
     if alreadyExists
-    then set envRef v val >> return val
+    then set envRef v val >>= \_ -> return $ Tokens.String v
     else setnew v val envRef
     where setnew v val envRef = liftIO $ do
                             valRef  <- newIORef val
                             env     <- readIORef envRef
                             writeIORef envRef $ (v, valRef) : env
-                            return val
+                            return $ String v
 
 bind :: Env -> [(String, Token)] -> IO Env
 bind envRef arr = readIORef envRef >>= extend arr >>= newIORef

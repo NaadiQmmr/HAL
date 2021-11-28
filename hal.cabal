@@ -32,7 +32,6 @@ library
       ParserLib
       Primitives
       Repl
-      Stack
       Tokens
   other-modules:
       Paths_hal
