@@ -74,7 +74,7 @@ unpackB b        = runError $ TypeMismatch "boolean" b
 
 car :: [Token] -> Run Token
 car [List (x:_)]                = return x
-car [ImproperList xs x]         = return x
+car [ImproperList [xs] x]       = return xs
 car [any]                       = runError $ TypeMismatch "pair" any
 car x                           = runError $ NumArgs 1 x
 

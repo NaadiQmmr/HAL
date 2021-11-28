@@ -51,12 +51,16 @@ instance Show Token where
     show (Number i)             = show i
     show (Atom s)               = s
     show (String s)             = "\"" ++ s ++ "\""
-    show (List x)               = "(" ++ unlist x ++ ")"
+    show (List x)               = Tokens.showList x
     show (Primitive name _)     = "<function " ++ name ++ ">"
     show (Lambda _ _)           = "<lambda>"
-    show (ImproperList xs x)    = "(" ++ show x ++ " . " ++ unlist xs ++ ")"
-    show Nil                    = "Nil"
+    show (ImproperList xs x)    = "(" ++ unlist xs ++ " . " ++ show x ++ ")"
+    show Nil                    = "()"
     show (Rat r)                = show r
+
+showList :: [Token] -> String
+showList (x@(Atom "\'"): xs) = show x ++ unlist xs
+showList x = "(" ++ unlist x ++ ")"
 
 unlist :: [Token] -> String
 unlist = unwords . map show
@@ -69,7 +73,7 @@ ratio = do
     x <- many digit
     has '/'
     y <- many digit
-    return $ Rat ((read x) % (read y))
+    return $ Rat (read x % read y)
 
 string :: Parser Token
 string = do
@@ -77,7 +81,9 @@ string = do
     s <- many $ escape <|> hasNoneOf "\""
     has '"'
     return $ String s
-    where escape = has '\\' <* hasOneOf "\\\""
+
+escape :: Parser Char
+escape = has '\\' <* hasOneOf "\\\""
 
 symbol :: Parser Char
 symbol = hasOneOf "!$%&*+-./:<=>?@^_~"
@@ -91,10 +97,9 @@ atom = do
     return $ case together of
         "#t"    -> Bool True
         "#f"    -> Bool False
+        "quote" -> Atom "\'"
+        "\'"    -> Atom "\'"
         _       -> Atom together
-
-quote :: Parser Token
-quote = has '\'' >> expr >>= \x -> return $ List [Atom "quote", x]
 
 unary :: Parser String
 unary = do
@@ -118,7 +123,7 @@ improperList = do
     return $ ImproperList head tail
 
 expr :: Parser Token
-expr = atom <|> ratio <|> number <|> string <|> quote <|> do
+expr = atom <|> ratio <|> number <|> string <|> quote' <|> quote <|> do
     has '('
     parsed <- list <|> improperList
     has ')'

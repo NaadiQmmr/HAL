@@ -7,6 +7,7 @@ import Tokens
 import ParserLib
 import CombinedParsers
 
+import Data.Functor
 import System.IO
 import Control.Monad.State
 import Control.Monad.Except
@@ -29,16 +30,15 @@ run env x = evaluated env x >>= putStrLn
 runSingle :: String -> IO String
 runSingle x = do
     env     <- emptyEnv
-    result  <- evaluated env x
-    return result
+    evaluated env x
 
 throws :: IORuntimeError String -> IO String
-throws x = runExceptT (trap x) >>= return . get''
+throws x = runExceptT (trap x) <&> get''
     where   trap a          = catchError a (return . show)
             get'' (Right a) = a
 
 evaluated :: Env -> String -> IO String
-evaluated env x = throws $ liftM show $ (lift' $ run' x) >>= eval env
+evaluated env x = throws $ fmap show $ lift' (run' x) >>= eval env
                 where run' x = runExpr expr x
 
 runExpr :: Parser a -> String -> Run a

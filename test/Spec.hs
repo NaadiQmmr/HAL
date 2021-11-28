@@ -5,6 +5,7 @@ import CombinedParsers
 import ParserLib
 import Eval
 import Tokens
+import Repl
 
 import TestLib
 import TestEvalInvalidCases
@@ -29,89 +30,132 @@ testParserHas = TestCase $ assertEqual "Should get first character if predicate"
 testParserHas' = TestCase $ assertEqual "Should not get first character if pred"
                 Nothing (runParser (has 'd') "char")
 
-testEvalString = TestCase $ assertEqual "Just return the string"
-                (Right $ Tokens.String "blabla") (eval $ Tokens.String "blabla")
 
-testEvalBoolTrue = TestCase $ assertEqual "Just return the boolean True"
-                (Right $ Tokens.Bool True ) (eval $ Tokens.Bool True)
-testEvalBoolFalse =  TestCase $ assertEqual "Just return the boolean False"
-                (Right $ Tokens.Bool False) (eval $ Tokens.Bool False)
-testEvalNumber = TestCase $ assertEqual "Just return the number"
-                (Right $ Tokens.Number 0) (eval $ Tokens.Number 0)
-testEvalNegNumber =  TestCase $ assertEqual "Just return the negative number"
-                (Right $ Tokens.Number (-1)) (eval $ Tokens.Number (-1))
-testEvalAtom = TestCase $ assertEqual "Just return the atom"
-                (Right $ Tokens.Atom "word") (eval $ Tokens.Atom "word")
+testEvalString = TestCase (do
+                                a <- runSingle "\"blabla\""
+                                let b = "blabla"
+                                assertEqual "Just return the string" b a)
 
-testListCompo1 = TestCase $ assertEqual "basic quote prim"
-                (Right $ Tokens.Number 1) (eval $ Tokens.List [Tokens.Atom "quote", Tokens.Number 1])
+testEvalBoolTrue = TestCase (do
+                                a <- runSingle "#t"
+                                let b = "#t"
+                                assertEqual "Just return the boolean True" b a)
 
-testListCompo2 = TestCase $ assertEqual "Should compute the result"
-                (Right $ Tokens.Number 3) (eval $ Tokens.List [Tokens.Atom "-", Tokens.Number 4, Tokens.Number 1])
+testEvalBoolFalse =  TestCase (do
+                                a <- runSingle "#f"
+                                let b = "#f"
+                                assertEqual "Just return the boolean False" b a)
 
-testListCompo3 = TestCase $ assertEqual "Should construct a proper List"
-                (Right $ Tokens.List [Tokens.Number 4])
-                (eval $ Tokens.List [Tokens.Atom "cons", Tokens.Number 4, Tokens.List []])
+testEvalNumber = TestCase (do
+                                a <- runSingle "0"
+                                let b = "0"
+                                assertEqual "Just return the number" b a)
 
-testListCompo4 =  TestCase $ assertEqual "Should construct a proper List"
-                (Right $ Tokens.List [Tokens.String "a", Tokens.String "b"])
-                (eval $ Tokens.List [Tokens.Atom "cons", Tokens.String "a", Tokens.List [Tokens.Atom "cons", Tokens.String "b", Tokens.List []]])
+testEvalNegNumber =  TestCase (do
+                                a <- runSingle "(- 3)"
+                                let b = "-3"
+                                assertEqual "Just return the negative number" b a)
+ 
+testEvalAtom = TestCase (do
+                                a <- runSingle "'word"
+                                let b = "word"
+                                assertEqual "Just return the atom" b a)
 
-testListConsCompo0 = TestCase $ assertEqual "Simple cons evaluation"
-                (Right $ Tokens.List [Tokens.String "a"])
-                (eval $ Tokens.List [Tokens.Atom "cons", Tokens.String "a", Tokens.List []])
+testListCompo1 = TestCase (do
+                                a <- runSingle "'(1)"
+                                let b = "(1)"
+                                assertEqual "Basic quote" b a) 
 
-testListCarCompo1 = TestCase $ assertEqual "Should evaluate car on a cons List"
-                (Right $ Tokens.String "a")
-                (eval $ Tokens.List [Tokens.Atom "car", Tokens.List [Tokens.Atom "cons", Tokens.String "a", Tokens.List []]])
+testListCompo2 = TestCase (do
+                                a <- runSingle "(- 4 1)"
+                                let b = "3"
+                                assertEqual "Should compute the result" b a)
 
-testListCdrCompo1 = TestCase $ assertEqual "Should evaluate cdr on a List with only one element"
-                (Right Tokens.Nil)
-                (eval $ Tokens.List [Tokens.Atom "cdr", Tokens.List [Tokens.Atom "cons", Tokens.String "a", Tokens.List []]])
+testListCompo3 = TestCase (do
+                                a <- runSingle "(cons 4 '())"
+                                let b = "(4)"
+                                assertEqual "Should construct a proper List" b a)
 
-testListCdrCompo2 = TestCase $ assertEqual "Should construct cdr on a List with several elements"
-                (Right $ Tokens.List [Tokens.String "b", Tokens.String "c"])
-                (eval $ Tokens.List [Tokens.Atom "cdr",
-                        Tokens.List [Tokens.Atom "quote", Tokens.List [Tokens.String "a", Tokens.String "b", Tokens.String "c"]]])
+testListCompo4 =  TestCase (do
+                                a <- runSingle "(cons 1 (cons 2 '()))"
+                                let b = "(1 2)"
+                                assertEqual "Should construct a proper List" b a)
 
-testImproperList = TestCase $ assertEqual "Basic construction of an ImproperList"
-                (Right $ Tokens.ImproperList [Tokens.String "a"] (Tokens.String "b"))
-                (eval $ Tokens.List [Tokens.Atom "cons", Tokens.String "a", Tokens.String "b"])
+testListConsCompo0 = TestCase (do
+                                a <- runSingle "(cons 1 '())"
+                                let b = "(1)"
+                                assertEqual "Simple cons evaluation" b a)
+
+testListCarCompo1 = TestCase (do
+                                a <- runSingle "(car (cons 1 '()))"
+                                let b = "1"
+                                assertEqual "Should evaluate car on a cons List" b a)
+
+testListCdrCompo1 = TestCase (do
+                                a <- runSingle "(cdr (cons 1 '()))"
+                                let b = "()"
+                                assertEqual "Should evaluate cdr on a List with only one element" b a)
+
+testListCdrCompo2 = TestCase (do
+                                a <- runSingle "(cdr (cons 1 '(2 3)))"
+                                let b = "(2 3)"
+                                assertEqual "Should construct cdr on a List with several elements" b a)
+
+testImproperList = TestCase (do
+                                a <- runSingle "(cons 1 2)"
+                                let b = "(1 . 2)"
+                                assertEqual "Basic construction of an ImproperList" b a)
+
+testImproperList2 = TestCase (do
+                                a <- runSingle "(cons '() 1)"
+                                let b = "(() . 1)"
+                                assertEqual "another construction of improperList, with a list as first argument" b a)
+
+testImproperList3 = TestCase (do
+                                a <- runSingle "(car '(1 . 2))"
+                                let b = "1"
+                                assertEqual "construciton with quote" b a)
+
+testImproperCar = TestCase (do
+                                a <- runSingle "(car (cons '(3 . 4) 1))"
+                                let b = "(3 . 4)"
+                                assertEqual "car on improperList" b a)
+
+testImproperCdr = TestCase (do
+                                a <- runSingle "(cdr (cons '(1 . 2) 2))"
+                                let b = "2"
+                                assertEqual "ImproperList cdr" b a)
 
 
-testImproperList2 = TestCase $ assertEqual "Represent: (cons '() 1)"
-                    (Right $ Tokens.ImproperList [Tokens.List[]] (Tokens.Number 1))
-                    (eval $ Tokens.List[Tokens.Atom "cons", Tokens.List [Tokens.Atom "quote", Tokens.List[]], Tokens.Number 1])
+testListHard = TestCase (do
+                                a <- runSingle "(cons '(1) '(2 3))"
+                                let b = "((1) 2 3)"
+                                assertEqual "sublist construction" b a)
 
-testImproperListCar = TestCase $ assertEqual "Represents: (car (cons '(a b) 1))"
-                (Right $ Tokens.Number 1)
-                (run "(car (cons '(a b) 1))")
+testCondBasic = TestCase (do
+                                a <- runSingle "(cond (#f 1) (#t (+ 1 1)))"
+                                let b = "2"
+                                assertEqual "Basic condition" b a)
 
-testImproperListCdr = TestCase $ assertEqual "Represents: (cdr (cons '(a b))"
-                (Right $ Tokens.String "b")
-                (eval $ Tokens.List [Tokens.Atom "cdr",
-                        Tokens.List[Tokens.Atom "cons", Tokens.String "a", Tokens.String "b"]])
+testEqBasic = TestCase (do
+                                a <- runSingle "(eq? 1 1)"
+                                let b = "#t"
+                                assertEqual "Basic equality" b a)
 
+testQuote' = TestCase (do
+                                a <- runSingle "(quote (1 (quote 3)))"
+                                let b = "(1 '3)"
+                                assertEqual "quote with quote" b a)
 
-testListHard = TestCase $ assertEqual "Represents: (cons '(1) '(2 3))"
-                (Right $ Tokens.List[Tokens.List [Tokens.Number 1], Tokens.Number 2, Tokens.Number 3])
-                (eval $ Tokens.List[Tokens.Atom "cons", Tokens.List[Tokens.Atom "quote", Tokens.List[Tokens.Number 1]], Tokens.List[Tokens.Atom "quote", Tokens.List[Tokens.Number 2, Tokens.Number 3]]])
+testQuote = TestCase (do
+                                a <- runSingle "'(1 car '(2))"
+                                let b = "(1 car '(2))"
+                                assertEqual "basic quote" b a)
 
-testCondBasic = TestCase $ assertEqual "Represent:  (cond (#f 1) (#t (+ 1 1)))"
-                (Right $ Number 2)
-                (eval $ Tokens.List[Tokens.Atom "cond", Tokens.List[Tokens.Bool False, Tokens.Number 1], Tokens.List[Tokens.Bool True, Tokens.List[Tokens.Atom "+", Tokens.Number 1, Tokens.Number 1]]])
-
-testEqBasic = TestCase $ assertEqual "(eq? 1 1)"
-                (Right $ Tokens.Bool True)
-                (eval $ Tokens.List[Tokens.Atom "eq?", Tokens.Number 1, Tokens.Number 1])
-
-testQuote = TestCase $ assertEqual "Represents: '(1 car '(2))" -- Shouldn't evaluate anything, just return args.
-                (Right $ Tokens.List[Tokens.Number 1, Tokens.Atom "car", Tokens.List[Tokens.Atom "quote", Tokens.List[Tokens.Number 2]]])
-                (run "'(1 car '(2))")
-
-testEq = TestCase $ assertEqual "Represent: (eq? 'foo (car '(foo bar)))"
-                (Right $ Tokens.Bool True)
-                (eval $ Tokens.List[Tokens.Atom "eq?", Tokens.List[Tokens.Atom "quote", Tokens.Atom "foo"], Tokens.List[Tokens.Atom "car", Tokens.List[Tokens.Atom "quote", Tokens.List[Tokens.Atom "foo", Tokens.Atom "bar"]]]])
+testEq = TestCase (do
+                                a <- runSingle "(eq? 'foo (car '(foo bar)))"
+                                let b = "#t"
+                                assertEqual "more sophisticated equality" b a)
 
 testRunParser :: Test
 testRunParser = TestList [
@@ -139,10 +183,12 @@ testRunParser = TestList [
     "eval list hard"                ~: testListHard,
     "eval improperlist"             ~: testImproperList,
     "eval improperlist 2"           ~: testImproperList2,
-    "eval improperlist car"         ~: testImproperListCar,
-    "eval improperlist cdr"         ~: testImproperListCdr,
+    "eval improperList 3"           ~: testImproperList3,
+    "eval improperlist car"         ~: testImproperCar,
+    "eval improperlist cdr"         ~: testImproperCdr,
     "eval quote"                    ~: testQuote,
-
+    "eval quote 2"                  ~: testQuote'
+{-
     "eval invalid type"             ~: testEvalBadForm,
     "eval bad comparison"           ~: testCompBadTypes,
     "eval unknown prim"             ~: testUnknownPrim,
@@ -151,5 +197,5 @@ testRunParser = TestList [
     "eval car invalid case 2"       ~: testCarInvalidType,
     "eval cdr invalid case"         ~: testCdrNumArgs,
     "eval cdr invalid case 2"       ~: testCdrInvalidType,
-    "eval cons invalid case"        ~: testConsNumArgs
+    "eval cons invalid case"        ~: testConsNumArgs-}
     ]

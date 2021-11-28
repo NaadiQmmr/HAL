@@ -20,7 +20,7 @@ eval _ val@(Bool _) = return val
 eval e val@(Atom name) = get' e name
 eval _ val@Nil = return val
 eval _ val@(List [_]) = return val
-eval _ (List [Atom "quote", val]) = return val
+eval _ (List [Atom "\'", val]) = return val
 eval e x = evalFuncs e x
 
 evalFuncs :: Env -> Token -> IORuntimeError Token
