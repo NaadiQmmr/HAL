@@ -166,6 +166,16 @@ testEq = TestCase (do
                                 let b = "#t"
                                 assertEqual "more sophisticated equality" b a)
 
+testIsNull = TestCase(do
+                                a <- runSingle "(null? 1)"
+                                let b = "#f"
+                                assertEqual "(null? 1)" b a)
+
+testIsNull2 = TestCase(do
+                                a <- runSingle "(null? '())"
+                                let b = "#t"
+                                assertEqual "(null? '())" b a)
+
 testRunParser :: Test
 testRunParser = TestList [
     "parsing a character"           ~: testParserChar,
@@ -198,7 +208,9 @@ testRunParser = TestList [
     "eval improperlist car"         ~: testImproperCar,
     "eval improperlist cdr"         ~: testImproperCdr,
     "eval quote"                    ~: testQuote,
-    "eval quote 2"                  ~: testQuote'
+    "eval quote 2"                  ~: testQuote',
+    "isnull"                        ~: testIsNull,
+    "isnull2"                       ~: testIsNull2
 {-
     "eval invalid type"             ~: testEvalBadForm,
     "eval bad comparison"           ~: testCompBadTypes,

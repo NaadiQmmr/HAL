@@ -40,7 +40,7 @@ sPrims = [("string=?", sBoolPrim (==)),
 prims :: [(String, [Token] -> Run Token)]
 prims = nPrims ++ bPrims ++ sPrims ++
         [("car", car), ("cdr", cdr), ("cons", cons), ("eq?", eqv),
-        ("eqv?", eqv), ("equal?", eqv), ("atom?", isAtom)]
+        ("eqv?", eqv), ("equal?", eqv), ("atom?", isAtom), ("null?", isNull)]
 
 boolPrim :: (Token -> Run a) -> (a -> a -> Bool) -> [Token] -> Run Token
 boolPrim unpack op args = if length args /= 2
@@ -123,3 +123,10 @@ eqvPair (x, y) = case eqv [x, y] of
 isAtom :: [Token] -> Run Token
 isAtom [Atom _]     = return $ Bool True
 isAtom _            = return $ Bool False
+
+isNull :: [Token] -> Run Token
+isNull []           = return $ Bool True 
+isNull [Nil]        = return $ Bool True 
+isNull [List []]    = return $ Bool True 
+isNull [String ""]  = return $ Bool True 
+isNull _            = return $ Bool False
