@@ -5,6 +5,10 @@ import Data.Functor
 import Tokens
 import Env
 
+primBind :: IO Env
+primBind = emptyEnv >>= (flip bind $ map primFunc prims)
+    where primFunc (key, func) = (key, Primitive func)
+
 nPrims :: [(String, [Token] -> Run Token)]
 nPrims = [("+", numPrim (+)),
         ("-", numPrim (-)),
@@ -15,14 +19,12 @@ nPrims = [("+", numPrim (+)),
         ("remainder", numPrim rem)]
 
 bPrims :: [(String, [Token] -> Run Token)]
-bPrims = [("=", nBoolPrim (==)),
-        ("<", nBoolPrim (<)),
-        (">", nBoolPrim (>)),
-        ("/=", nBoolPrim (/=)),
-        ("<=", nBoolPrim (<=)),
-        (">=", nBoolPrim (>=)),
-        ("&&", bBoolPrim (&&)),
-        ("||", bBoolPrim (||))]
+bPrims = [("=", nBoolPrim (==)), ("<", nBoolPrim (<)),
+        (">", nBoolPrim (>)), ("/=", nBoolPrim (/=)),
+        ("<=", nBoolPrim (<=)), (">=", nBoolPrim (>=)),
+        ("&&", bBoolPrim (&&)), ("||", bBoolPrim (||)),
+        ("#f", bBoolPrim (const $ const False)),
+        ("#t", bBoolPrim (const $ const True))]
         where   nBoolPrim = boolPrim unpackNb
                 bBoolPrim = boolPrim unpackB
 

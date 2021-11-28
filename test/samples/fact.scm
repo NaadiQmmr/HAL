@@ -1,4 +1,1 @@
-(define (fact n)
-    (if (= n 0)
-        1
-        (* n (- n 1))))
+(define (fact x) (cond ((eq? x 1) 1) (#t (* x (fact (- x 1))))))

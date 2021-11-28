@@ -4,6 +4,7 @@ import Lib
 import Env
 import Eval
 import Tokens
+import Primitives
 import ParserLib
 import CombinedParsers
 
@@ -29,7 +30,7 @@ run env x = evaluated env x >>= putStrLn
 
 runSingle :: String -> IO String
 runSingle x = do
-    env     <- emptyEnv
+    env     <- primBind
     evaluated env x
 
 throws :: IORuntimeError String -> IO String

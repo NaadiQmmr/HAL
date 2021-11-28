@@ -39,10 +39,11 @@ data Token = Number Integer |
     String String |
     Atom String |
     List [Token] |
-    Rat Rational | -- i miss Paris, you know ...
+    Rat Rational |
     ImproperList [Token] Token |
-    Primitive String Func |
-    Lambda Env Func |
+    Primitive ([Token] -> Run Token) |
+    Lambda { args :: [String], variadic :: (Maybe String),
+            body :: [Token], endEnv :: Env} |
     Nil
 
 instance Show Token where
@@ -52,8 +53,8 @@ instance Show Token where
     show (Atom s)               = s
     show (String s)             = "\"" ++ s ++ "\""
     show (List x)               = Tokens.showList x
-    show (Primitive name _)     = "<function " ++ name ++ ">"
-    show (Lambda _ _)           = "<lambda>"
+    show (Primitive _)          = "<function>"
+    show (Lambda a _ b _)       = "<lambda" ++ show a ++ "." ++ show b ++ ">"
     show (ImproperList xs x)    = "(" ++ unlist xs ++ " . " ++ show x ++ ")"
     show Nil                    = "()"
     show (Rat r)                = show r
@@ -86,11 +87,11 @@ escape :: Parser Char
 escape = has '\\' <* hasOneOf "\\\""
 
 symbol :: Parser Char
-symbol = hasOneOf "!$%&*+-./:<=>?@^_~"
+symbol = hasOneOf "!#$%&|*+-/:<=>?@^_~"
 
 atom :: Parser Token
 atom = do
-    x   <- letter <|> symbol
+    x   <- symbol <|> letter
     xs  <- many $ digit <|> symbol <|> letter
 
     let together = x:xs

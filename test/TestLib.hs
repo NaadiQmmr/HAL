@@ -16,7 +16,7 @@ instance Eq Token where
         List a == List b = a == b
         ImproperList list_a a == ImproperList list_b b = list_a == list_b && a == b
         ImproperList list_a Nil == List list_b = list_a == list_b
-        Primitive a _ == Primitive b _ = a == b
+        --Primitive a == Primitive b = a == b
         --Lambda _ f == Lambda _ f' == f == f'
         Nil == Nil = True
         List [Nil] == Nil = True

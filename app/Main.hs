@@ -3,6 +3,9 @@ module Main where
 import Lib
 import Eval
 import Tokens
+import Primitives
+import FileExec
+import Repl
 import Env
 import System.Environment
 import FileExec
@@ -15,7 +18,7 @@ isRepl _        = False
 
 main :: IO ()
 main = do
-    env <- emptyEnv
+    env <- primBind
     args <- getArgs
     if isRepl args then repl env else readFiles env args
 

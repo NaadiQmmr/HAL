@@ -7,6 +7,7 @@ import Primitives
 
 import Data.Either
 import Data.Functor
+import Data.Maybe
 import Control.Monad.State
 import Control.Monad.Except
 
@@ -25,40 +26,55 @@ eval e x = evalFuncs e x
 
 evalFuncs :: Env -> Token -> IORuntimeError Token
 evalFuncs e val@(List (Atom "cond":_)) = conditionnal e val
-evalFuncs e val@(List (Atom "if":_)) = ifSpecialCase e val
+evalFuncs e val@(List (Atom "if":_)) = conditionnal e val
 evalFuncs e (List [Atom "set!", Atom v, f]) = eval e f >>= set e v
 evalFuncs e (List [Atom "define", Atom v, f]) = eval e f >>= define e v
-evalFuncs e (List (Atom f:a)) = mapM (eval e) a >>= lift' . apply f
-evalFuncs _ err = lift' $ runError $ BadSpecialForm err
+evalFuncs e (List (Atom "define":List (Atom name:args):body)) =
+    getNormalFunction e args body >>= define e name
+evalFuncs e token = evalFuncs_ e token
 
-apply :: String -> [Token] -> Run Token
-apply func args = maybe (runError $ NotFunction func)
-                        ($ args)
-                        (lookup func prims)
+evalFuncs_ :: Env -> Token -> IORuntimeError Token
+evalFuncs_ e (List (Atom "lambda":List a:body)) = getNormalFunction e a body
+evalFuncs_ e (List (Atom "lambda":ImproperList args vargs:body)) =
+    getVargs vargs e args body
+evalFuncs_ e (List (Atom "lambda":vargs@(Atom _):body)) =
+    getVargs vargs e [] body
+evalFuncs_ e (List (f:a)) = eval e f >>= \f' -> mapM (eval e) a
+                            >>= \a' -> apply f' a'
+evalFuncs_ _ err = lift' $ runError $ BadSpecialForm err
+
+getFunction :: Maybe String -> Env -> [Token] -> [Token] -> IORuntimeError Token
+getFunction vargs e args body = return $ Lambda (map show args) vargs body e
+
+getNormalFunction :: Env -> [Token] -> [Token] -> IORuntimeError Token
+getNormalFunction = getFunction Nothing
+
+getVargs :: Token -> Env -> [Token] -> [Token] -> IORuntimeError Token
+getVargs = getFunction . Just . show
+
+apply :: Token -> [Token] -> IORuntimeError Token
+apply (Primitive f) args = lift' $ f args
+apply (Lambda a v b e) args = if len a /= len args && isNothing v
+                    then lift' $ runError $ NumArgs (len a) args
+                    else liftIO (bind e $ zip a args) >>= bind' v >>= eval'
+        where   len = toInteger . length
+                remArgs = drop (length a) args
+                eval' env = last <$> mapM (eval env) b
+                bind' arg env = case arg of
+                    Just name -> liftIO $ bind env [(name, List $ remArgs)]
+                    _         -> return env
+apply f a = lift' $ runError $ Default $ "could not apply " ++ show f ++ show a
 
 {-# ANN module "HLint: ignore Use lambda-case" #-}
-ifSpecialCase :: Env -> Token -> IORuntimeError Token
-ifSpecialCase e (List [Atom "if", pred, then', else']) =
+conditionnal :: Env -> Token -> IORuntimeError Token
+conditionnal e (List [Atom _, pred, then', else']) =
     eval e pred >>= \res -> case res of
-        Bool False  -> eval e then'
-        _           -> eval e else'
-ifSpecialCase e (List [Atom "if", pred, then']) =
+        Bool False  -> eval e else'
+        _           -> eval e then'
+conditionnal e (List [Atom _, pred, then']) =
     eval e pred >>= \res -> case res of
         Bool False  -> lift' $ runError
                         $ Default "Unexpected branching."
         _           -> eval e then'
-ifSpecialCase _ _ = lift' $ runError $ Default "Expected predicate."
-
-{-# ANN module "HLint: ignore Use lambda-case" #-}
-conditionnal :: Env -> Token -> IORuntimeError Token
-conditionnal e (List (Atom "cond":body)) = case body of
-    []                              -> return $ List []
-    (List [Atom "else", value]:_)   -> eval e value
-    (List [pred, x]:xs)         -> eval e pred >>= \res -> caseof e res x xs
-        where caseof env res x xs = case res of
-                        List []     -> eval e $ List $ Atom "cond":xs
-                        Bool False  -> eval e $ List $ Atom "cond":xs
-                        _           -> eval e x
-conditionnal _ _ = lift' $ runError
-    $ Default "Entered condition without predicate."
+conditionnal _ _ = lift' $ runError $ Default "Expected predicate."
 
