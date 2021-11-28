@@ -3,12 +3,15 @@ module Tokens where
 import ParserLib
 import CombinedParsers
 
-import Data.IORef
 import Control.Monad
 import Control.Applicative
 import Data.Char
+import Data.IORef
+import Data.Ratio
+import Control.Monad.Except
 
 type Env = IORef [(String, IORef Token)]
+type IORuntimeError = ExceptT RuntimeError IO
 
 type Run a = Either RuntimeError a
 newtype Func = Func { function :: [Token] -> Run Token }
@@ -36,6 +39,7 @@ data Token = Number Integer |
     String String |
     Atom String |
     List [Token] |
+    Rat Rational | -- i miss Paris, you know ...
     ImproperList [Token] Token |
     Primitive String Func |
     Lambda Env Func |
@@ -52,6 +56,7 @@ instance Show Token where
     show (Lambda _ _)           = "<lambda>"
     show (ImproperList xs x)    = "(" ++ show x ++ " . " ++ unlist xs ++ ")"
     show Nil                    = "Nil"
+    show (Rat r)                = show r
 
 unlist :: [Token] -> String
 unlist = unwords . map show
@@ -59,8 +64,20 @@ unlist = unwords . map show
 token :: Parser a -> Parser a
 token p = between (with "(") p (with ")")
 
+ratio :: Parser Token
+ratio = do
+    x <- many digit
+    has '/'
+    y <- many digit
+    return $ Rat ((read x) % (read y))
+
 string :: Parser Token
-string = between (has '\"') (many char) (has '\"') >>= \x -> return $ String x
+string = do
+    has '"'
+    s <- many $ escape <|> hasNoneOf "\""
+    has '"'
+    return $ String s
+    where escape = has '\\' <* hasOneOf "\\\""
 
 symbol :: Parser Char
 symbol = hasOneOf "!$%&*+-./:<=>?@^_~"
@@ -101,7 +118,7 @@ improperList = do
     return $ ImproperList head tail
 
 expr :: Parser Token
-expr = atom <|> number <|> string <|> quote <|> do
+expr = atom <|> ratio <|> number <|> string <|> quote <|> do
     has '('
     parsed <- list <|> improperList
     has ')'

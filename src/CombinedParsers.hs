@@ -13,6 +13,12 @@ runParser p s = case parse p s of
 hasOneOf :: String -> Parser Char
 hasOneOf x = satisfy $ flip elem x
 
+hasNoneOf :: String -> Parser Char
+hasNoneOf x = satisfyNot $ flip elem x
+
+satisfyNot :: (Char -> Bool) -> Parser Char
+satisfyNot p = char >>= \c -> if p c then empty else pure c
+
 letter :: Parser Char
 letter = satisfy isAlpha
 

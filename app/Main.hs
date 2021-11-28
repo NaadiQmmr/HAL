@@ -5,6 +5,7 @@ import Eval
 import Tokens
 import FileExec
 import Repl
+import Env
 
 import System.IO
 import System.Environment
@@ -18,6 +19,8 @@ isRepl ["-i"]   = True
 isRepl _        = False
 
 main :: IO ()
-main = getArgs >>= \args -> if isRepl args then
-                            repl else readFiles args
+main = do
+    env <- emptyEnv
+    args <- getArgs
+    if isRepl args then repl env else readFiles env args
 

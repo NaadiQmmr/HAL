@@ -1,3 +1,4 @@
 tags
+hal
 *.lock
 .stack-work/*
