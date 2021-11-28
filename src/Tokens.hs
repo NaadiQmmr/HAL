@@ -56,7 +56,7 @@ instance Show Token where
     show (Primitive _)          = "<function>"
     show (Lambda a _ b _)       = "<lambda" ++ show a ++ "." ++ show b ++ ">"
     show (ImproperList xs x)    = "(" ++ unlist xs ++ " . " ++ show x ++ ")"
-    show Nil                    = "()"
+    show Nil                    = ""
     show (Rat r)                = show r
 
 showList :: [Token] -> String

@@ -81,7 +81,7 @@ car [any]                       = runError $ TypeMismatch "pair" any
 car x                           = runError $ NumArgs 1 x
 
 cdr :: [Token] -> Run Token
-cdr [List (_:xs)]               = if null xs then return Nil
+cdr [List (_:xs)]               = if null xs then return $ List []
                                   else return $ List xs
 cdr [ImproperList [_] x]        = return x
 cdr [ImproperList (_:xs) x]     = return $ ImproperList xs x

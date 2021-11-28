@@ -133,12 +133,17 @@ testListHard = TestCase (do
                                 assertEqual "sublist construction" b a)
 
 testCondBasic = TestCase (do
-                                a <- runSingle "(cond (#f 1) (#t (+ 1 1)))"
-                                let b = "2"
-                                assertEqual "Basic condition" b a)
+                                a <- runSingle "(cond (#f 1) (#t '(1 1)))"
+                                let b = "(1 1)"
+                                assertEqual "(cond (#f 1) (#t '(1 1)))" b a)
+
+testCondBasic2 = TestCase (do
+                                a <- runSingle "(cond ((eq? 'foo 'foo) 1) (#t 4))"
+                                let b = "1"
+                                assertEqual "(cond ((eq? 'foo 'foo) 1) (#t 4))" b a)
 
 testEqBasic = TestCase (do
-                                a <- runSingle "(eq? 1 1)"
+                                a <- runSingle "(eq? 'foo 'foo)"
                                 let b = "#t"
                                 assertEqual "Basic equality" b a)
 
@@ -177,6 +182,7 @@ testRunParser = TestList [
     "eval cdr on list"              ~: testListCdrCompo1,
     "eval cdr 2 on list"            ~: testListCdrCompo2,
     "eval basic condition"          ~: testCondBasic,
+    "eval basic cond 2"             ~: testCondBasic2,
     "eval basic equal?"             ~: testEqBasic,
     "eval sophisticated equal?"     ~: testEq,
     "eval basic cons"               ~: testListConsCompo0,

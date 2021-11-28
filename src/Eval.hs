@@ -53,6 +53,9 @@ getVargs :: Token -> Env -> [Token] -> [Token] -> IORuntimeError Token
 getVargs = getFunction . Just . show
 
 apply :: Token -> [Token] -> IORuntimeError Token
+apply (Bool True) [arg] = return arg
+apply (Bool True) args = return $ List args
+apply false@(Bool False) _ = return false 
 apply (Primitive f) args = lift' $ f args
 apply (Lambda a v b e) args = if len a /= len args && isNothing v
                     then lift' $ runError $ NumArgs (len a) args
@@ -61,20 +64,20 @@ apply (Lambda a v b e) args = if len a /= len args && isNothing v
                 remArgs = drop (length a) args
                 eval' env = last <$> mapM (eval env) b
                 bind' arg env = case arg of
-                    Just name -> liftIO $ bind env [(name, List $ remArgs)]
+                    Just name -> liftIO $ bind env [(name, List remArgs)]
                     _         -> return env
 apply f a = lift' $ runError $ Default $ "could not apply " ++ show f ++ show a
 
 {-# ANN module "HLint: ignore Use lambda-case" #-}
 conditionnal :: Env -> Token -> IORuntimeError Token
-conditionnal e (List [Atom _, pred, then', else']) =
+conditionnal e (List (Atom _: List [true] : xs)) = return true
+conditionnal e (List [Atom _, List[pred, then'], else'@(List[pred', then''])]) =
     eval e pred >>= \res -> case res of
-        Bool False  -> eval e else'
-        _           -> eval e then'
-conditionnal e (List [Atom _, pred, then']) =
+        Bool False -> conditionnal e else'
+        _          -> eval e then'
+conditionnal e (List [pred, then']) =
     eval e pred >>= \res -> case res of
-        Bool False  -> lift' $ runError
-                        $ Default "Unexpected branching."
-        _           -> eval e then'
+        Bool False -> return Nil
+        _          -> eval e then'
 conditionnal _ _ = lift' $ runError $ Default "Expected predicate."
 
