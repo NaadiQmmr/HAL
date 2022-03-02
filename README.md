@@ -22,7 +22,6 @@ You can either run the binary with your scheme files as arguments, or you can ad
 | **<** | check if the first argument is smaller than the second one | (< (* 2 2) 5) |
 | **quote, '** | returns the argument without evaluating it | (quote (1 1)) |
 | **lambda** | Takes a list of parameters as first argument, and an expresion to evaluate as second argument, returns a lambda (procedure) which can be subsequently called. | (lambda (a b ) (+ a b)) |
-| **define** |If it’s first argument is a symbol, associate the symbol to its second argument, and returns it’s name.If it’s first argument is a list, defines a function which name is the first elemnt of the list, the rest of the listits parameters, and the second argument the function’s body. | (define add (lambda (a b ) (+ a b))) |
-| **let** | Takes a list of key/values as first argument, and an expression as a second argument, evaluate this second
-argument within an environement where the key / value pairs are bound. | (let ((a 2) (b (+ 1 2))) (+ a b)) |
+| **define** |If it’s first argument is a symbol, associate the symbol to its second argument, and returns it’s name.If it’s first argument is a list, defines a function which name is the first elemnt of the list, the rest of the listits parameters, and the second argument the function’s body. | (define add (lambda (a b )(+ a b))) |
+| **let** | Takes a list of key/values as first argument, and an expression as a second argument, evaluate this secondargument within an environement where the key / value pairs are bound. | (let ((a 2) (b (+ 1 2))) (+ a b)) |
 | **cond** | Evaluates each expression of the lists. If the first expression on a list is true, it returns the value of the second element. Otherwise, it tries the next list argument. | (cond (#f 1) (#t (+ 1 1))) |
